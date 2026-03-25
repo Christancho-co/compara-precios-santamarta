@@ -16,7 +16,6 @@ export async function searchOlimpica(query: string): Promise<Product[]> {
 
     console.log('[Olimpica] status:', res.status);
 
-    // Usar res.json() directamente — maneja gzip automáticamente
     const data = await res.json();
 
     console.log('[Olimpica] productos:', Array.isArray(data) ? data.length : 'no es array');
