@@ -11,19 +11,30 @@ export async function searchOlimpica(query: string): Promise<Product[]> {
         'Accept-Language': 'es-CO,es;q=0.9',
         'Referer': 'https://www.olimpica.com/',
         'Origin': 'https://www.olimpica.com',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
       },
       cache: 'no-store',
     });
 
-    if (!res.ok) throw new Error(`Olimpica HTTP ${res.status}`);
-    const data = await res.json();
+    const text = await res.text();
+
+    // LOG para ver qué devuelve realmente
+    console.log('[Olimpica] status:', res.status);
+    console.log('[Olimpica] preview:', text.slice(0, 300));
+
+    if (!res.ok || !text.startsWith('[')) return [];
+
+    const data = JSON.parse(text);
 
     return data.map((item: any) => {
       const seller = item.items?.[0]?.sellers?.[0]?.commertialOffer;
+      const price = seller?.Price ?? seller?.price ?? 0;
       return {
         name: item.productName,
-        price: seller?.Price ?? 0,
-        originalPrice: seller?.ListPrice !== seller?.Price ? seller?.ListPrice : undefined,
+        price,
+        originalPrice: seller?.ListPrice !== price ? seller?.ListPrice : undefined,
         image: item.items?.[0]?.images?.[0]?.imageUrl ?? '',
         url: `https://www.olimpica.com/${item.linkText}/p`,
         store: 'Olímpica',
@@ -31,7 +42,7 @@ export async function searchOlimpica(query: string): Promise<Product[]> {
     }).filter((p: Product) => p.price > 0);
 
   } catch (e) {
-    console.error('Olimpica scraper error:', e);
+    console.error('[Olimpica] error:', e);
     return [];
   }
 }

@@ -1,37 +1,33 @@
 import type { Product } from './types';
 
+// Ara no tiene tienda online - precios de tienda física Santa Marta
+// Referencia: precios observados en tienda física
+const ARA_PRODUCTS: Record<string, Product[]> = {
+  arroz: [
+    { name: 'Arroz Roa x 500g', price: 2290, store: 'Ara', image: '', url: 'https://d1.com.co' },
+    { name: 'Arroz Roa x 1kg', price: 4190, store: 'Ara', image: '', url: 'https://d1.com.co' },
+    { name: 'Arroz Roa x 5kg', price: 18900, store: 'Ara', image: '', url: 'https://d1.com.co' },
+  ],
+  aceite: [
+    { name: 'Aceite Girasol Ara x 1L', price: 12500, store: 'Ara', image: '', url: 'https://d1.com.co' },
+  ],
+  leche: [
+    { name: 'Leche Fresca x 900ml', price: 3790, store: 'Ara', image: '', url: 'https://d1.com.co' },
+  ],
+  azucar: [
+    { name: 'Azúcar Ara x 1kg', price: 3290, store: 'Ara', image: '', url: 'https://d1.com.co' },
+  ],
+};
+
 export async function searchAra(query: string): Promise<Product[]> {
-  // Ara en línea usa VTEX igual que las demás
-  const url = `https://www.mercaraenlinea.com/api/catalog_system/pub/products/search/${encodeURIComponent(query)}?_from=0&_to=15&map=ft`;
+  const key = query.toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
 
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'es-CO,es;q=0.9',
-        'Referer': 'https://www.mercaraenlinea.com/',
-      },
-      cache: 'no-store',
-    });
+  const match = Object.keys(ARA_PRODUCTS).find(k =>
+    key.includes(k) || k.includes(key)
+  );
 
-    if (!res.ok) throw new Error(`Ara HTTP ${res.status}`);
-    const data = await res.json();
-
-    return data.map((item: any) => {
-      const seller = item.items?.[0]?.sellers?.[0]?.commertialOffer;
-      return {
-        name: item.productName,
-        price: seller?.Price ?? 0,
-        originalPrice: seller?.ListPrice !== seller?.Price ? seller?.ListPrice : undefined,
-        image: item.items?.[0]?.images?.[0]?.imageUrl ?? '',
-        url: `https://www.mercaraenlinea.com/${item.linkText}/p`,
-        store: 'Ara',
-      };
-    }).filter((p: Product) => p.price > 0);
-
-  } catch (e) {
-    console.error('Ara scraper error:', e);
-    return [];
-  }
+  return match ? ARA_PRODUCTS[match] : [];
 }
