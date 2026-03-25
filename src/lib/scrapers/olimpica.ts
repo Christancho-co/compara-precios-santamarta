@@ -1,17 +1,23 @@
-// Olímpica bloquea su API directa - usamos proxy interno con Puppeteer/fetch SSR
 import type { Product } from './types';
+
 export async function searchOlimpica(query: string): Promise<Product[]> {
-  // Olímpica también tiene API VTEX
   const url = `https://www.olimpica.com/api/catalog_system/pub/products/search/${encodeURIComponent(query)}?_from=0&_to=15&map=ft`;
-  
+
   try {
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'es-CO,es;q=0.9',
+        'Referer': 'https://www.olimpica.com/',
+        'Origin': 'https://www.olimpica.com',
+      },
       cache: 'no-store',
     });
-    if (!res.ok) throw new Error();
+
+    if (!res.ok) throw new Error(`Olimpica HTTP ${res.status}`);
     const data = await res.json();
-    
+
     return data.map((item: any) => {
       const seller = item.items?.[0]?.sellers?.[0]?.commertialOffer;
       return {
@@ -23,7 +29,9 @@ export async function searchOlimpica(query: string): Promise<Product[]> {
         store: 'Olímpica',
       };
     }).filter((p: Product) => p.price > 0);
-  } catch {
+
+  } catch (e) {
+    console.error('Olimpica scraper error:', e);
     return [];
   }
 }

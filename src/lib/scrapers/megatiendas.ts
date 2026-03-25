@@ -10,7 +10,7 @@ export async function searchMegatiendas(query: string): Promise<Product[]> {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       'Accept': 'application/json',
     },
-    cache: 'no-store', // cache 1 hora
+    next: { revalidate: 3600 }, // cache 1 hora
   });
 
   if (!res.ok) return [];
