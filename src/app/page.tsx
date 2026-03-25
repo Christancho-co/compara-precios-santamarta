@@ -48,7 +48,7 @@ export default function Home() {
       if (!res.ok) throw new Error('Error buscando');
       const data = await res.json();
       setResults(data);
-    } catch (err: any) {
+    } catch (err) {
       setError('Error al buscar. Intenta de nuevo.');
     } finally {
       setLoading(false);
