@@ -1,4 +1,6 @@
 // D1 bloquea su API directa - usamos proxy interno con Puppeteer/fetch SSR
+import type { Product } from './types';
+
 export async function searchD1(query: string): Promise<Product[]> {
   // D1 usa VTEX pero con autenticación. Usamos su endpoint de búsqueda inteligente
   const url = `https://domicilios.tiendasd1.com/_v/segment/graphql/v1`;
@@ -30,7 +32,7 @@ export async function searchD1(query: string): Promise<Product[]> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(graphqlQuery),
-      next: { revalidate: 3600 },
+      cache: 'no-store',
     });
 
     if (!res.ok) throw new Error('D1 API error');

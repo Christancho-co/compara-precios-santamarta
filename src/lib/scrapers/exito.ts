@@ -1,3 +1,5 @@
+// Éxito usa VTEX - API pública confirmada ✅
+import type { Product } from './types';
 export async function searchExito(query: string): Promise<Product[]> {
   // Éxito usa VTEX también
   const url = `https://www.exito.com/api/catalog_system/pub/products/search/${encodeURIComponent(query)}?_from=0&_to=15&map=ft`;
@@ -5,7 +7,7 @@ export async function searchExito(query: string): Promise<Product[]> {
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
-      next: { revalidate: 3600 },
+      cache: 'no-store',
     });
     if (!res.ok) throw new Error();
     const data = await res.json();

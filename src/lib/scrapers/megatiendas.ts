@@ -1,14 +1,6 @@
 // Megatiendas usa VTEX - API pública confirmada ✅
-export interface Product {
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  url: string;
-  store: string;
-  unit?: string;
-  pricePerGram?: number;
-}
+import type { Product } from './types'; 
+
 
 export async function searchMegatiendas(query: string): Promise<Product[]> {
   const url = `https://www.megatiendas.co/api/catalog_system/pub/products/search/${encodeURIComponent(query)}?_from=0&_to=20&map=ft`;
@@ -18,7 +10,7 @@ export async function searchMegatiendas(query: string): Promise<Product[]> {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       'Accept': 'application/json',
     },
-    next: { revalidate: 3600 }, // cache 1 hora
+    cache: 'no-store', // cache 1 hora
   });
 
   if (!res.ok) return [];

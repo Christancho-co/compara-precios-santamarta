@@ -1,3 +1,5 @@
+// Olímpica bloquea su API directa - usamos proxy interno con Puppeteer/fetch SSR
+import type { Product } from './types';
 export async function searchOlimpica(query: string): Promise<Product[]> {
   // Olímpica también tiene API VTEX
   const url = `https://www.olimpica.com/api/catalog_system/pub/products/search/${encodeURIComponent(query)}?_from=0&_to=15&map=ft`;
@@ -5,7 +7,7 @@ export async function searchOlimpica(query: string): Promise<Product[]> {
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
-      next: { revalidate: 3600 },
+      cache: 'no-store',
     });
     if (!res.ok) throw new Error();
     const data = await res.json();
