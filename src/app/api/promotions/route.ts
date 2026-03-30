@@ -1,63 +1,74 @@
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
 
-// Olímpica: extrae clusterHighlights de su API VTEX
-async function getOlimpicaPromos() {
-  try {
-    const res = await fetch(
-      'https://www.olimpica.com/api/catalog_system/pub/products/search/?O=OrderByScoreDESC&_from=0&_to=5&sc=1',
-      { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }, next: { revalidate: 3600 } }
-    )
-    const data = await res.json()
-    const promos = new Set<string>()
-    data?.forEach((p: any) => {
-      Object.values(p.clusterHighlights || {}).forEach((v: any) => promos.add(v))
-    })
-    return [...promos].slice(0, 3).map(p => ({ store: 'olimpica', text: p }))
-  } catch { return [{ store: 'olimpica', text: 'Ofertas disponibles en tienda' }] }
-}
-
-// Éxito: misma arquitectura VTEX
-async function getExitoPromos() {
-  try {
-    const res = await fetch(
-      'https://www.exito.com/api/catalog_system/pub/products/search/?O=OrderByScoreDESC&_from=0&_to=5',
-      { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' }, next: { revalidate: 3600 } }
-    )
-    const data = await res.json()
-    const promos = new Set<string>()
-    data?.forEach((p: any) => {
-      Object.values(p.clusterHighlights || {}).forEach((v: any) => promos.add(v))
-    })
-    return [...promos].slice(0, 3).map(p => ({ store: 'exito', text: p }))
-  } catch { return [{ store: 'exito', text: 'Descuentos semanales en todas las secciones' }] }
-}
-
-// D1 y Ara: hardcodeadas por ahora
-function getD1Promos() {
-  return [
-    { store: 'd1', text: 'Arroz x10kg desde $18.900' },
-    { store: 'd1', text: 'Aceite 3L desde $22.500' },
-  ]
-}
-function getAraPromos() {
-  return [
-    { store: 'ara', text: 'Precios bajos garantizados' },
-    { store: 'ara', text: '2x1 en productos seleccionados' },
-  ]
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const [olimpica, exito] = await Promise.allSettled([
-    getOlimpicaPromos(),
-    getExitoPromos(),
-  ])
-  return NextResponse.json({
-    promotions: [
-      ...(olimpica.status === 'fulfilled' ? olimpica.value : []),
-      ...(exito.status === 'fulfilled' ? exito.value : []),
-      ...getD1Promos(),
-      ...getAraPromos(),
-    ],
-    updatedAt: new Date().toISOString()
-  })
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Domingo, 1=Lunes, 2=Martes, 3=Miércoles...
+  const dayOfMonth = now.getDate();
+  
+  const promotions: Array<{ store: string; text: string; image?: string }> = [];
+
+  // ÉXITO - Promociones por día
+  if (dayOfWeek === 2) { // Martes
+    promotions.push({
+      store: 'Éxito',
+      text: '🥬 Martes del Campo: Hasta 35% en frutas y verduras'
+    });
+  } else if (dayOfWeek === 3) { // Miércoles
+    promotions.push({
+      store: 'Éxito',
+      text: '🥩 Miércoles de Carnes: Hasta 30% en res, cerdo y pollo'
+    });
+  } else if ([15, 16, 30, 31].includes(dayOfMonth) || dayOfMonth === 1) {
+    promotions.push({
+      store: 'Éxito',
+      text: '🔥 Mega Ofertas: Descuentos en pastas, granos y más'
+    });
+  } else {
+    promotions.push({
+      store: 'Éxito',
+      text: '✨ Ahorra todos los días en tu mercado'
+    });
+  }
+
+  // OLÍMPICA - Promociones por día
+  if (dayOfWeek === 3) { // Miércoles
+    promotions.push({
+      store: 'Olímpica',
+      text: '🍅 Miércoles de Plaza: 40% en frutas y verduras'
+    });
+  } else {
+    promotions.push({
+      store: 'Olímpica',
+      text: '💰 Golazos de la semana: Ofertas especiales'
+    });
+  }
+
+  // D1 - Promociones generales
+  promotions.push({
+    store: 'D1',
+    text: '📦 Precios bajos todos los días'
+  });
+
+  // ARA - Promociones generales
+  promotions.push({
+    store: 'Ara',
+    text: '🛍️ Ahorra en tu mercado diario'
+  });
+
+  // MEGATIENDAS - Promociones generales
+  promotions.push({
+    store: 'Megatiendas',
+    text: '🎯 Ofertas de fin de semana'
+  });
+
+  return NextResponse.json(
+    { promotions },
+    {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200'
+      }
+    }
+  );
 }
